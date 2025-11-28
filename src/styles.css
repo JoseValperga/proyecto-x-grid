@@ -1,0 +1,70 @@
+/* src/styles.css */
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.map-panel {
+  flex: 2;
+  min-width: 0;
+}
+
+.side-panel {
+  flex: 1;
+  border-left: 1px solid #ddd;
+  padding: 16px;
+  box-sizing: border-box;
+  background-color: #f9fafb;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Estilos de la lista */
+.parcel-list {
+  margin-top: 16px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.parcel-item {
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.parcel-item:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.parcel-item.selected {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 1px #16a34a33;
+}
+
+.parcel-title {
+  font-weight: 600;
+}
+
+.parcel-meta {
+  font-size: 0.85rem;
+  color: #4b5563;
+  margin-top: 4px;
+}
