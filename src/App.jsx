@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Rectangle, Tooltip } from "react-leaflet";
 
 function App() {
   // Centro de las Yungas (aprox) para el demo
-  const center = [-26.80, -65.30];
+  const center = [-26.8, -65.3];
 
   // Configuración del "paisaje" que vamos a cuadricular
   // (esto es una caja geográfica ficticia para el demo)
@@ -54,9 +54,7 @@ function App() {
             [lat2, lng2],
           ],
           useType: isConservation ? "Conservación" : "Producción sostenible",
-          conservationStatus: isConservation
-            ? "Protegida"
-            : "En monitoreo",
+          conservationStatus: isConservation ? "Protegida" : "En monitoreo",
           funded: isFunded,
         });
 
@@ -65,26 +63,35 @@ function App() {
     }
 
     return parcelsArray;
-  }, [boundsConfig.latMax, boundsConfig.latMin, boundsConfig.lngMax, boundsConfig.lngMin, rows, cols]);
+  }, [
+    boundsConfig.latMax,
+    boundsConfig.latMin,
+    boundsConfig.lngMax,
+    boundsConfig.lngMin,
+    rows,
+    cols,
+  ]);
 
   const selectedParcel = parcels.find((p) => p.id === selectedParcelId) || null;
 
   // Función para elegir color según estado
   const getFillColor = (parcel) => {
     if (parcel.funded) {
-      // Financiada
-      return "#16a34a88"; // verde con transparencia
+      // Financiada: azul brillante
+      return "#3b82f6aa"; // azul con transparencia
     }
     if (parcel.useType === "Conservación") {
-      return "#22c55e55"; // verde más claro
+      // Conservación: verde vivo
+      return "#22c55eaa";
     }
-    return "#facc1555"; // amarillito para producción
+    // Producción sostenible: amarillo intenso
+    return "#eab308aa";
   };
 
   const getStrokeColor = (parcel) => {
-    if (parcel.funded) return "#15803d"; // borde verde oscuro
-    if (parcel.useType === "Conservación") return "#166534";
-    return "#92400e";
+    if (parcel.funded) return "#1d4ed8"; // azul oscuro
+    if (parcel.useType === "Conservación") return "#166534"; // verde oscuro
+    return "#92400e"; // marrón para producción
   };
 
   return (
@@ -99,12 +106,12 @@ function App() {
         >
           {/* Capa base (puede ser otra, pero esta es suficiente para el demo) */}
           <TileLayer
-            attribution='&copy; <a href="https://cartodb.com">CartoDB</a> contributors'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors'
+            url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
           />
 
           {/* Dibujamos cada parcela como un rectángulo clickable */}
-          {parcels.map((parcel) => (
+          {/*parcels.map((parcel) => (
             <Rectangle
               key={parcel.id}
               bounds={parcel.bounds}
@@ -112,10 +119,18 @@ function App() {
                 color: getStrokeColor(parcel),
                 weight: selectedParcelId === parcel.id ? 3 : 1,
                 fillColor: getFillColor(parcel),
-                fillOpacity: 0.6,
+                fillOpacity: 0.7,
               }}
               eventHandlers={{
                 click: () => setSelectedParcelId(parcel.id),
+                mouseover: (e) => {
+                  e.target.setStyle({ weight: 3 });
+                },
+                mouseout: (e) => {
+                  e.target.setStyle({
+                    weight: selectedParcelId === parcel.id ? 3 : 1,
+                  });
+                },
               }}
             >
               <Tooltip direction="center" permanent={false}>
@@ -123,16 +138,45 @@ function App() {
                   <div style={{ fontWeight: "600", fontSize: "0.8rem" }}>
                     {parcel.id}
                   </div>
-                  <div style={{ fontSize: "0.7rem" }}>
-                    {parcel.useType}
-                  </div>
+                  <div style={{ fontSize: "0.7rem" }}>{parcel.useType}</div>
                   <div style={{ fontSize: "0.7rem" }}>
                     {parcel.funded ? "Financiada" : "Disponible"}
                   </div>
                 </div>
               </Tooltip>
             </Rectangle>
-          ))}
+          ))*/}
+          {parcels.map((parcel) => {
+            const isSelected = selectedParcelId === parcel.id;
+
+            return (
+              <Rectangle
+                key={parcel.id}
+                bounds={parcel.bounds}
+                pathOptions={{
+                  color: isSelected ? "#ef4444" : getStrokeColor(parcel), // rojo bien visible
+                  weight: isSelected ? 5 : 1, // borde mucho más grueso
+                  fillColor: getFillColor(parcel),
+                  fillOpacity: isSelected ? 0.9 : 0.7, // más “llena” la seleccionada
+                }}
+                eventHandlers={{
+                  click: () => setSelectedParcelId(parcel.id),
+                }}
+              >
+                <Tooltip direction="center" permanent={false}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontWeight: "600", fontSize: "0.8rem" }}>
+                      {parcel.id}
+                    </div>
+                    <div style={{ fontSize: "0.7rem" }}>{parcel.useType}</div>
+                    <div style={{ fontSize: "0.7rem" }}>
+                      {parcel.funded ? "Financiada" : "Disponible"}
+                    </div>
+                  </div>
+                </Tooltip>
+              </Rectangle>
+            );
+          })}
         </MapContainer>
       </div>
 
@@ -140,8 +184,8 @@ function App() {
       <div className="side-panel">
         <h2>Proyecto X · Demo de Parcela</h2>
         <p style={{ fontSize: "0.9rem", color: "#4b5563" }}>
-          Hacé click en una celda del mapa para ver los datos
-          de esa “hectárea” de paisaje.
+          Hacé click en una celda del mapa para ver los datos de esa “hectárea”
+          de paisaje.
         </p>
 
         {selectedParcel ? (
@@ -156,17 +200,17 @@ function App() {
             </p>
             <p>
               <strong>Estado de financiación:</strong>{" "}
-              {selectedParcel.funded ? "Financiada ✅" : "Disponible para financiar"}
+              {selectedParcel.funded
+                ? "Financiada ✅"
+                : "Disponible para financiar"}
             </p>
             <p>
-              <strong>Posición en la cuadrícula:</strong>{" "}
-              fila {selectedParcel.row + 1}, columna{" "}
-              {selectedParcel.col + 1}
+              <strong>Posición en la cuadrícula:</strong> fila{" "}
+              {selectedParcel.row + 1}, columna {selectedParcel.col + 1}
             </p>
             <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>
-              (En un siguiente paso, acá conectarías con el smart
-              contract para ver el dueño del token, fecha de
-              financiación, etc.)
+              (En un siguiente paso, acá conectarías con el smart contract para
+              ver el dueño del token, fecha de financiación, etc.)
             </p>
           </div>
         ) : (
