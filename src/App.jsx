@@ -209,7 +209,7 @@ function App() {
               {selectedParcel.row + 1}, columna {selectedParcel.col + 1}
             </p>
             <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>
-              (En un siguiente paso, acá conectarías con el smart contract para
+              (En un siguiente paso, acá se va a conectar con el smart contract para
               ver el dueño del token, fecha de financiación, etc.)
             </p>
           </div>
