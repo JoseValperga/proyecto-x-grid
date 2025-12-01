@@ -29,7 +29,7 @@ function App() {
     }
   }, [currentData]);
 
-  // Estilo general para las parcelas del GeoJSON
+  // Estilo general para las parcelas del GeoJSON (polígonos)
   const geoJsonStyle = () => {
     if (activeLayer === "publica") {
       return {
@@ -46,6 +46,19 @@ function App() {
         fillOpacity: 0.7,
       };
     }
+  };
+
+  // Marcadores para POINT / MULTIPOINT (evitamos el icono por defecto de Leaflet)
+  const pointToLayer = (feature, latlng) => {
+    const isPublic = activeLayer === "publica";
+
+    return L.circleMarker(latlng, {
+      radius: 6,
+      color: isPublic ? "#166534" : "#7c2d12", // borde
+      weight: 1.5,
+      fillColor: isPublic ? "#22c55e" : "#f97316", // relleno
+      fillOpacity: 0.9,
+    });
   };
 
   // Cómo tratamos cada feature: click + tooltip
@@ -128,6 +141,7 @@ function App() {
             data={currentData}
             style={geoJsonStyle}
             onEachFeature={onEachFeature}
+            pointToLayer={pointToLayer} // <- aquí evitamos el icono por defecto
           />
         </MapContainer>
       </div>
