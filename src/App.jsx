@@ -3,9 +3,6 @@ import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
 import "./styles.css";
 
-import proteccionPublica from "./data/proteccion_publica.json";
-import proteccionPrivada from "./data/proteccion_privada.json";
-
 function App() {
   const mapRef = useRef(null);
   const [selectedFeature, setSelectedFeature] = useState(null);
@@ -13,12 +10,54 @@ function App() {
   // "publica" o "privada"
   const [activeLayer, setActiveLayer] = useState("publica");
 
+  // GeoJSON de áreas públicas y privadas cargados por fetch (ubicados en public/data/)
+  const [publicData, setPublicData] = useState(null);
+  const [privateData, setPrivateData] = useState(null);
+
+  // Cargar GeoJSON público
+  useEffect(() => {
+    const loadPublicData = async () => {
+      try {
+        const res = await fetch("/data/neatogeo_ProteccionPublica.geojson");
+        if (!res.ok) {
+          console.error("Error al cargar el GeoJSON público", res.statusText);
+          return;
+        }
+        const data = await res.json();
+        setPublicData(data);
+      } catch (err) {
+        console.error("Error de red al cargar el GeoJSON público:", err);
+      }
+    };
+
+    loadPublicData();
+  }, []);
+
+  // Cargar GeoJSON privado
+  useEffect(() => {
+    const loadPrivateData = async () => {
+      try {
+        const res = await fetch("/data/neatogeo_ProteccionPrivada.geojson");
+        if (!res.ok) {
+          console.error("Error al cargar el GeoJSON privado", res.statusText);
+          return;
+        }
+        const data = await res.json();
+        setPrivateData(data);
+      } catch (err) {
+        console.error("Error de red al cargar el GeoJSON privado:", err);
+      }
+    };
+
+    loadPrivateData();
+  }, []);
+
   const currentData =
-    activeLayer === "publica" ? proteccionPublica : proteccionPrivada;
+    activeLayer === "publica" ? publicData : privateData;
 
   // Ajustar el mapa para mostrar TODO el GeoJSON cada vez que cambia la capa
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !currentData) return;
 
     const map = mapRef.current;
     const geoJsonLayer = L.geoJSON(currentData);
@@ -61,6 +100,42 @@ function App() {
     });
   };
 
+  // ---- helper: obtener HTML de description y sanearlo para poder renderizarlo ----
+  const getSanitizedHtmlDescription = (props) => {
+    if (!props) return "";
+
+    let rawDesc = "";
+
+    // Puede venir como string o como objeto con @value
+    if (typeof props.description === "string") {
+      rawDesc = props.description;
+    } else if (
+      props.description &&
+      typeof props.description === "object" &&
+      typeof props.description["@value"] === "string"
+    ) {
+      rawDesc = props.description["@value"];
+    }
+
+    if (!rawDesc) return "";
+
+    let cleaned = rawDesc;
+
+    // 1) eliminar <script> ... </script>
+    cleaned = cleaned.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "");
+
+    // 2) eliminar atributos tipo onclick="...", onmouseover="...", etc.
+    cleaned = cleaned.replace(/\son\w+\s*=\s*(['"]).*?\1/gi, "");
+
+    // 3) evitar javascript: en href o src
+    cleaned = cleaned.replace(
+      /(href|src)\s*=\s*(['"])\s*javascript:[^'"]*\2/gi,
+      ""
+    );
+
+    return cleaned.trim();
+  };
+
   // Cómo tratamos cada feature: click + tooltip
   const onEachFeature = (feature, layer) => {
     const props = feature.properties || {};
@@ -94,29 +169,6 @@ function App() {
       ? "Áreas de Protección Pública"
       : "Áreas de Protección Privada";
 
-  // ---- helper para limpiar la descripción HTML de las privadas ----
-  const getCleanPrivateDescription = (props) => {
-    if (!props) return "";
-
-    let rawDesc = "";
-
-    if (typeof props.description === "string") {
-      rawDesc = props.description;
-    } else if (
-      props.description &&
-      typeof props.description === "object" &&
-      typeof props.description["@value"] === "string"
-    ) {
-      rawDesc = props.description["@value"];
-    }
-
-    if (!rawDesc) return "";
-
-    // quitamos etiquetas HTML y normalizamos espacios
-    const withoutTags = rawDesc.replace(/<[^>]+>/g, " ");
-    return withoutTags.replace(/\s+/g, " ").trim();
-  };
-
   return (
     <div className="app-container">
       {/* Mapa */}
@@ -135,14 +187,16 @@ function App() {
             url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
           />
 
-          {/* key fuerza a React-Leaflet a recrear la capa cuando cambia */}
-          <GeoJSON
-            key={activeLayer}
-            data={currentData}
-            style={geoJsonStyle}
-            onEachFeature={onEachFeature}
-            pointToLayer={pointToLayer} // <- aquí evitamos el icono por defecto
-          />
+          {/* Solo renderizamos la capa cuando hay datos */}
+          {currentData && (
+            <GeoJSON
+              key={activeLayer}
+              data={currentData}
+              style={geoJsonStyle}
+              onEachFeature={onEachFeature}
+              pointToLayer={pointToLayer}
+            />
+          )}
         </MapContainer>
       </div>
 
@@ -208,57 +262,50 @@ function App() {
             </p>
 
             <h4 style={{ marginTop: "1rem", marginBottom: "0.25rem" }}>
-              Propiedades
+              Detalle
             </h4>
 
-            {activeLayer === "publica" ? (
-              // Vista bonita para las públicas: lista clave–valor
-              <div
-                style={{
-                  backgroundColor: "#e5e7eb",
-                  padding: "8px",
-                  borderRadius: "8px",
-                  maxHeight: "260px",
-                  overflowY: "auto",
-                  fontSize: "0.8rem",
-                  lineHeight: "1.3rem",
-                }}
-              >
-                {selectedFeature.properties &&
-                  Object.entries(selectedFeature.properties).map(
-                    ([key, value]) => (
-                      <p key={key}>
-                        <strong>{key}:</strong> {String(value)}
-                      </p>
-                    )
-                  )}
-              </div>
-            ) : (
-              // Vista amigable para las privadas
-              <div
-                style={{
-                  backgroundColor: "#e5e7eb",
-                  padding: "8px",
-                  borderRadius: "8px",
-                  maxHeight: "260px",
-                  overflowY: "auto",
-                  fontSize: "0.8rem",
-                }}
-              >
-                <p>
-                  <strong>Nombre:</strong>{" "}
-                  {selectedFeature.properties?.name ??
-                    selectedFeature.properties?.NOMBRE ??
-                    "Sin nombre"}
-                </p>
-                {getCleanPrivateDescription(selectedFeature.properties) && (
-                  <p style={{ marginTop: "0.5rem" }}>
-                    <strong>Descripción:</strong>{" "}
-                    {getCleanPrivateDescription(selectedFeature.properties)}
-                  </p>
-                )}
-              </div>
-            )}
+            <div
+              style={{
+                backgroundColor: "#e5e7eb",
+                padding: "8px",
+                borderRadius: "8px",
+                maxHeight: "260px",
+                overflowY: "auto",
+                fontSize: "0.8rem",
+                lineHeight: "1.3rem",
+              }}
+            >
+              {(() => {
+                const htmlDesc = getSanitizedHtmlDescription(
+                  selectedFeature.properties
+                );
+
+                if (htmlDesc) {
+                  // Aprovechamos las etiquetas HTML de la descripción (públicas o privadas)
+                  return (
+                    <div
+                      style={{ fontSize: "0.8rem", lineHeight: "1.25rem" }}
+                      dangerouslySetInnerHTML={{ __html: htmlDesc }}
+                    />
+                  );
+                }
+
+                // Si no hay description, mostramos propiedades como lista clave–valor
+                return (
+                  <>
+                    {selectedFeature.properties &&
+                      Object.entries(selectedFeature.properties).map(
+                        ([key, value]) => (
+                          <p key={key}>
+                            <strong>{key}:</strong> {String(value)}
+                          </p>
+                        )
+                      )}
+                  </>
+                );
+              })()}
+            </div>
           </div>
         ) : (
           <div style={{ marginTop: "1rem", fontStyle: "italic" }}>
