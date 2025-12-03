@@ -1,7 +1,14 @@
-/// SidePanel.jsx
+// src/components/SidePanel.jsx
 import FeatureDetails from "./FeatureDetails";
+import { tileProviders } from "../config/tileProviders";
 
-function SidePanel({ activeLayer, onLayerChange, selectedFeature }) {
+function SidePanel({
+  activeLayer,
+  onLayerChange,
+  selectedFeature,
+  baseMap,
+  onBaseMapChange,
+}) {
   const tituloCapa =
     activeLayer === "publica"
       ? "Áreas de Protección Pública"
@@ -11,15 +18,12 @@ function SidePanel({ activeLayer, onLayerChange, selectedFeature }) {
     <div className="side-panel">
       <h2>Proyecto X · {tituloCapa}</h2>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "0.5rem",
-          marginBottom: "0.75rem",
-        }}
-      >
+      {/* Botón para cambiar entre pública / privada */}
+      <div style={{ marginBottom: "0.75rem" }}>
         <button
-          onClick={() => onLayerChange("publica")}
+          onClick={() =>
+            onLayerChange(activeLayer === "publica" ? "privada" : "publica")
+          }
           style={{
             padding: "0.4rem 0.8rem",
             borderRadius: "9999px",
@@ -27,28 +31,46 @@ function SidePanel({ activeLayer, onLayerChange, selectedFeature }) {
             cursor: "pointer",
             fontSize: "0.85rem",
             fontWeight: 500,
-            backgroundColor: activeLayer === "publica" ? "#111827" : "#e5e7eb",
-            color: activeLayer === "publica" ? "white" : "#111827",
+            backgroundColor: "#111827",
+            color: "white",
           }}
         >
-          Áreas públicas
+          {activeLayer === "publica"
+            ? "Ver áreas privadas"
+            : "Ver áreas públicas"}
         </button>
+      </div>
 
-        <button
-          onClick={() => onLayerChange("privada")}
+      {/* Selector de mapas de fondo */}
+      <div style={{ marginBottom: "0.75rem" }}>
+        <label
           style={{
-            padding: "0.4rem 0.8rem",
-            borderRadius: "9999px",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            backgroundColor: activeLayer === "privada" ? "#111827" : "#e5e7eb",
-            color: activeLayer === "privada" ? "white" : "#111827",
+            fontSize: "0.8rem",
+            color: "#6b7280",
+            marginRight: "0.5rem",
           }}
         >
-          Áreas privadas
-        </button>
+          Mapa de fondo:
+        </label>
+
+        <select
+          value={baseMap}
+          onChange={(e) => onBaseMapChange(e.target.value)}
+          style={{
+            padding: "0.3rem 0.5rem",
+            borderRadius: "9999px",
+            border: "1px solid #d1d5db",
+            fontSize: "0.8rem",
+            backgroundColor: "white",
+            cursor: "pointer",
+          }}
+        >
+          {Object.entries(tileProviders).map(([key, provider]) => (
+            <option key={key} value={key}>
+              {provider.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <p style={{ fontSize: "0.9rem", color: "#4b5563" }}>

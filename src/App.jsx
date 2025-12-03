@@ -3,15 +3,18 @@ import { useState } from "react";
 import "./styles.css";
 import SidePanel from "./components/SidePanel";
 import MapView from "./components/MapView";
-import { useAreasData } from "./hooks/useAreasData"; // ajustá la ruta si lo pusiste en /hooks
+import { useAreasData } from "./hooks/useAreasData";
+
 
 function App() {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [activeLayer, setActiveLayer] = useState("publica"); // "publica" o "privada"
 
-  // 🚚 Carga de datos movida al hook
-  const { publicData, privateData } = useAreasData();
+  // 🗺️ nuevo estado: mapa de fondo
+  const [baseMap, setBaseMap] = useState("hot"); // "hot" | "osm" | "esriSat"
 
+  // Carga de datos (hook separado)
+  const { publicData, privateData } = useAreasData();
   const currentData = activeLayer === "publica" ? publicData : privateData;
 
   const handleLayerChange = (layer) => {
@@ -26,6 +29,7 @@ function App() {
         <MapView
           activeLayer={activeLayer}
           data={currentData}
+          baseMap={baseMap}              // 👉 pasamos baseMap
           onFeatureSelect={setSelectedFeature}
         />
       </div>
@@ -35,6 +39,8 @@ function App() {
         activeLayer={activeLayer}
         onLayerChange={handleLayerChange}
         selectedFeature={selectedFeature}
+        baseMap={baseMap}               // 👉 lo ve el panel
+        onBaseMapChange={setBaseMap}    // 👉 y esto permite cambiarlo
       />
     </div>
   );
