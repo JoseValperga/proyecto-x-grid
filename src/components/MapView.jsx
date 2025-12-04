@@ -6,58 +6,91 @@ import { tileProviders } from "../config/tileProviders";
 
 const defaultCenter = [-26.8, -65.3];
 
-function MapView({ activeLayer, data, onFeatureSelect, baseMap = "hot" }) {
+function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   const mapRef = useRef(null);
 
-  // obtener el proveedor según la clave actual
   const currentTile = tileProviders[baseMap] || tileProviders.hot;
 
-  // Ajustar el mapa para mostrar TODO el GeoJSON cada vez que cambia la capa
+  // Ajustar el mapa para mostrar TODAS las capas visibles
   useEffect(() => {
-    if (!mapRef.current || !data) return;
+    if (!mapRef.current || !layers || layers.length === 0) return;
 
     const map = mapRef.current;
-    const geoJsonLayer = L.geoJSON(data);
-    const bounds = geoJsonLayer.getBounds();
+
+    // Creamos un grupo con todos los GeoJSON visibles
+    const group = L.featureGroup(
+      layers.map((layer) => L.geoJSON(layer.data))
+    );
+
+    const bounds = group.getBounds();
 
     if (bounds.isValid()) {
-      map.fitBounds(bounds.pad(0.05)); // deja un margen
+      map.fitBounds(bounds.pad(0.05));
     }
-  }, [data]);
+  }, [layers]);
 
-  // Estilo general para las parcelas del GeoJSON (polígonos)
-  const geoJsonStyle = () => {
-    return activeLayer === "publica"
-      ? {
-          color: "#166534",
-          weight: 1.5,
-          fillColor: "#22c55e55",
-          fillOpacity: 0.35,
-          //fillColor: "#22c55e88",
-          //fillOpacity: 0.7,
-        }
-      : {
-          color: "#7c2d12",
-          weight: 1.5,
-          fillColor: "#f9731688",
-          fillOpacity: 0.7,
-        };
+  // Estilo de polígonos según capa
+  const getPolygonStyleForLayer = (layerId) => {
+    if (layerId === "publica") {
+      return {
+        color: "#166534", // borde verde oscuro
+        weight: 1.5,
+        fillColor: "#22c55e55", // verde más transparente
+        fillOpacity: 0.35,
+      };
+    }
+
+    if (layerId === "privada") {
+      return {
+        color: "#7c2d12", // borde marrón/rojizo
+        weight: 1.5,
+        fillColor: "#f9731688", // naranja con algo de transparencia
+        fillOpacity: 0.6,
+      };
+    }
+
+    // default para futuras capas
+    return {
+      color: "#1f2933",
+      weight: 1.5,
+      fillColor: "#9ca3af88",
+      fillOpacity: 0.5,
+    };
   };
 
-  // Marcadores para POINT / MULTIPOINT
-  const pointToLayer = (feature, latlng) => {
-    const isPublic = activeLayer === "publica";
+  // Marcadores para puntos según capa
+  const getPointMarkerForLayer = (layerId, latlng) => {
+    if (layerId === "publica") {
+      return L.circleMarker(latlng, {
+        radius: 6,
+        color: "#166534",
+        weight: 1.5,
+        fillColor: "#22c55e",
+        fillOpacity: 0.9,
+      });
+    }
+
+    if (layerId === "privada") {
+      return L.circleMarker(latlng, {
+        radius: 6,
+        color: "#7c2d12",
+        weight: 1.5,
+        fillColor: "#f97316",
+        fillOpacity: 0.9,
+      });
+    }
+
+    // default
     return L.circleMarker(latlng, {
       radius: 6,
-      color: isPublic ? "#166534" : "#7c2d12",
+      color: "#1f2933",
       weight: 1.5,
-      fillColor: isPublic ? "#22c55e" : "#f97316",
+      fillColor: "#9ca3af",
       fillOpacity: 0.9,
     });
   };
 
-  // Eventos por feature: tooltip + click
-  const onEachFeature = (feature, layer) => {
+  const onEachFeatureBase = (feature, leafletLayer) => {
     const props = feature.properties || {};
     const name =
       props.NOMBRE ||
@@ -67,9 +100,12 @@ function MapView({ activeLayer, data, onFeatureSelect, baseMap = "hot" }) {
       props.id ||
       "Parcela";
 
-    layer.bindTooltip(name, { direction: "center", permanent: false });
+    leafletLayer.bindTooltip(name, {
+      direction: "center",
+      permanent: false,
+    });
 
-    layer.on("click", () => {
+    leafletLayer.on("click", () => {
       if (typeof onFeatureSelect === "function") {
         onFeatureSelect(feature);
       }
@@ -86,19 +122,23 @@ function MapView({ activeLayer, data, onFeatureSelect, baseMap = "hot" }) {
         mapRef.current = mapInstance;
       }}
     >
-      {/* Mapa de fondo dinámico */}
-      <TileLayer attribution={currentTile.attribution} url={currentTile.url} />
+      <TileLayer
+        attribution={currentTile.attribution}
+        url={currentTile.url}
+      />
 
-      {/* GeoJSON */}
-      {data && (
+      {/* Dibujar todas las capas visibles */}
+      {layers.map((layer) => (
         <GeoJSON
-          key={activeLayer}
-          data={data}
-          style={geoJsonStyle}
-          onEachFeature={onEachFeature}
-          pointToLayer={pointToLayer}
+          key={layer.id}
+          data={layer.data}
+          style={() => getPolygonStyleForLayer(layer.id)}
+          pointToLayer={(feature, latlng) =>
+            getPointMarkerForLayer(layer.id, latlng)
+          }
+          onEachFeature={onEachFeatureBase}
         />
-      )}
+      ))}
     </MapContainer>
   );
 }

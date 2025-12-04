@@ -3,45 +3,51 @@ import FeatureDetails from "./FeatureDetails";
 import { tileProviders } from "../config/tileProviders";
 
 function SidePanel({
-  activeLayer,
-  onLayerChange,
+  layerVisibility,
+  onToggleLayer,
   selectedFeature,
   baseMap,
   onBaseMapChange,
+  layerDefinitions,
 }) {
-  const tituloCapa =
-    activeLayer === "publica"
-      ? "Áreas de Protección Pública"
-      : "Áreas de Protección Privada";
-
   return (
     <div className="side-panel">
-      <h2>Proyecto X · {tituloCapa}</h2>
+      <h2>Proyecto X · Capas de protección</h2>
 
-      {/* Botón para cambiar entre pública / privada */}
+      {/* Checkboxes de capas */}
       <div style={{ marginBottom: "0.75rem" }}>
-        <button
-          onClick={() =>
-            onLayerChange(activeLayer === "publica" ? "privada" : "publica")
-          }
+        <p
           style={{
-            padding: "0.4rem 0.8rem",
-            borderRadius: "9999px",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            backgroundColor: "#111827",
-            color: "white",
+            fontSize: "0.8rem",
+            color: "#6b7280",
+            marginBottom: "0.25rem",
           }}
         >
-          {activeLayer === "publica"
-            ? "Ver áreas privadas"
-            : "Ver áreas públicas"}
-        </button>
+          Capas visibles:
+        </p>
+
+        {Object.entries(layerDefinitions).map(([layerId, def]) => (
+          <label
+            key={layerId}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              fontSize: "0.85rem",
+              marginBottom: "0.2rem",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={!!layerVisibility[layerId]}
+              onChange={() => onToggleLayer(layerId)}
+            />
+            <span>{def.label}</span>
+          </label>
+        ))}
       </div>
 
-      {/* Selector de mapas de fondo */}
+      {/* Selector de mapa de fondo */}
       <div style={{ marginBottom: "0.75rem" }}>
         <label
           style={{
@@ -74,10 +80,9 @@ function SidePanel({
       </div>
 
       <p style={{ fontSize: "0.9rem", color: "#4b5563" }}>
-        Hacé click en una parcela del mapa para ver sus datos. Los polígonos
-        provienen directamente de los archivos GeoJSON generados a partir de los
-        KMZ de ProYungas para áreas de protección{" "}
-        {activeLayer === "publica" ? "pública" : "privada"}.
+        Activá o desactivá capas para superponer áreas públicas, privadas y, en
+        el futuro, otras capas como ecorregiones o áreas de conservación. Hacé
+        click en una parcela para ver sus datos.
       </p>
 
       {selectedFeature ? (
