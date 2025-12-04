@@ -1,4 +1,3 @@
-// src/components/MapView.jsx
 import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
@@ -16,8 +15,6 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     if (!mapRef.current || !layers || layers.length === 0) return;
 
     const map = mapRef.current;
-
-    // Creamos un grupo con todos los GeoJSON visibles
     const group = L.featureGroup(
       layers.map((layer) => L.geoJSON(layer.data))
     );
@@ -33,23 +30,43 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   const getPolygonStyleForLayer = (layerId) => {
     if (layerId === "publica") {
       return {
-        color: "#166534", // borde verde oscuro
+        color: "#166534",
         weight: 1.5,
-        fillColor: "#22c55e55", // verde más transparente
+        fillColor: "#22c55e55",
         fillOpacity: 0.35,
       };
     }
 
     if (layerId === "privada") {
       return {
-        color: "#7c2d12", // borde marrón/rojizo
+        color: "#7c2d12",
         weight: 1.5,
-        fillColor: "#f9731688", // naranja con algo de transparencia
+        fillColor: "#f9731688",
         fillOpacity: 0.6,
       };
     }
 
-    // default para futuras capas
+    if (layerId === "conservadas") {
+      // azul para áreas conservadas
+      return {
+        color: "#1d4ed8",
+        weight: 1.5,
+        fillColor: "#60a5fa66",
+        fillOpacity: 0.5,
+      };
+    }
+
+    if (layerId === "ecoregiones") {
+      // violeta para ecoregiones
+      return {
+        color: "#6d28d9",
+        weight: 1.5,
+        fillColor: "#a855f766",
+        fillOpacity: 0.45,
+      };
+    }
+
+    // default
     return {
       color: "#1f2933",
       weight: 1.5,
@@ -58,7 +75,6 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     };
   };
 
-  // Marcadores para puntos según capa
   const getPointMarkerForLayer = (layerId, latlng) => {
     if (layerId === "publica") {
       return L.circleMarker(latlng, {
@@ -80,7 +96,26 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
       });
     }
 
-    // default
+    if (layerId === "conservadas") {
+      return L.circleMarker(latlng, {
+        radius: 6,
+        color: "#1d4ed8",
+        weight: 1.5,
+        fillColor: "#60a5fa",
+        fillOpacity: 0.9,
+      });
+    }
+
+    if (layerId === "ecoregiones") {
+      return L.circleMarker(latlng, {
+        radius: 6,
+        color: "#6d28d9",
+        weight: 1.5,
+        fillColor: "#a855f7",
+        fillOpacity: 0.9,
+      });
+    }
+
     return L.circleMarker(latlng, {
       radius: 6,
       color: "#1f2933",
@@ -127,7 +162,6 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
         url={currentTile.url}
       />
 
-      {/* Dibujar todas las capas visibles */}
       {layers.map((layer) => (
         <GeoJSON
           key={layer.id}

@@ -9,7 +9,12 @@ export const LAYER_DEFINITIONS = {
     id: "privada",
     label: "Áreas de protección privada",
   },
-  // Más adelante agregaremos aquí:
-  // ecoregiones: { id: "ecoregiones", label: "Ecorregiones" },
-  // conservacion: { id: "conservacion", label: "Áreas de conservación" },
+  conservadas: {
+    id: "conservadas",
+    label: "Áreas conservadas",
+  },
+  ecoregiones: {
+    id: "ecoregiones",
+    label: "Ecorregiones de Argentina",
+  },
 };

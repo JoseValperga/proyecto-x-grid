@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useState } from "react";
 import "./styles.css";
 import SidePanel from "./components/SidePanel";
@@ -9,19 +8,26 @@ import { LAYER_DEFINITIONS } from "./config/layersConfig";
 function App() {
   const [selectedFeature, setSelectedFeature] = useState(null);
 
-  // 🗺️ mapa de fondo
-  const [baseMap, setBaseMap] = useState("hot"); // "hot" | "osm" | "esriSat" | ...
+  // Mapa de fondo
+  const [baseMap, setBaseMap] = useState("hot");
 
-  // ✅ visibilidad de capas (multi-capa)
+  // Visibilidad de capas
   const [layerVisibility, setLayerVisibility] = useState({
     publica: true,
     privada: false,
+    conservadas: false,
+    ecoregiones: false,
   });
 
   // Datos GeoJSON
-  const { publicData, privateData } = useAreasData();
+  const {
+    publicData,
+    privateData,
+    conservedData,
+    ecoregionsData,
+  } = useAreasData();
 
-  // Construimos las capas que realmente se van a dibujar
+  // Construimos las capas visibles para el mapa
   const layersForMap = [];
 
   if (layerVisibility.publica && publicData) {
@@ -38,12 +44,26 @@ function App() {
     });
   }
 
+  if (layerVisibility.conservadas && conservedData) {
+    layersForMap.push({
+      id: "conservadas",
+      data: conservedData,
+    });
+  }
+
+  if (layerVisibility.ecoregiones && ecoregionsData) {
+    layersForMap.push({
+      id: "ecoregiones",
+      data: ecoregionsData,
+    });
+  }
+
   const handleToggleLayer = (layerId) => {
     setLayerVisibility((prev) => ({
       ...prev,
       [layerId]: !prev[layerId],
     }));
-    setSelectedFeature(null); // limpiamos selección al cambiar visibilidad
+    setSelectedFeature(null);
   };
 
   return (
