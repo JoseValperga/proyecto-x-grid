@@ -32,8 +32,8 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
       return {
         color: "#166534",
         weight: 1.5,
-        fillColor: "#22c55e55",
-        fillOpacity: 0.35,
+        fillColor: "#22c55e88",
+        fillOpacity: 0.7,
       };
     }
 

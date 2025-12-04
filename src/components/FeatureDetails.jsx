@@ -1,4 +1,4 @@
-// FeatureDetails.jsx
+// FeatureDetails.jsx - Procesa los archivos geojason para eliminar scripts y atributos peligrosos
 
 function getSanitizedHtmlDescription(props) {
   if (!props) return "";
