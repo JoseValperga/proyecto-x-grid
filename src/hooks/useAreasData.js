@@ -1,4 +1,6 @@
 // useAreasData.js
+// Este componente carga las areas publicas y privadas
+
 import { useEffect, useState } from "react";
 
 export function useAreasData() {
