@@ -6,56 +6,66 @@ import { tileProviders } from "../config/tileProviders";
 
 const defaultCenter = [-26.8, -65.3];
 
-// Paleta de colores para ecoregiones
+// --- Paleta de colores para ecoregiones ---
 const ECOREGION_COLORS = [
-  "#e11d48", // rosa fuerte
-  "#f97316", // naranja
-  "#22c55e", // verde
-  "#0ea5e9", // celeste
-  "#6366f1", // azul violáceo
-  "#a855f7", // violeta
-  "#facc15", // amarillo
-  "#14b8a6", // turquesa
-  "#8b5cf6", // lila
-  "#ec4899", // magenta
+  "#e11d48", "#f97316", "#22c55e", "#0ea5e9", "#6366f1",
+  "#a855f7", "#facc15", "#14b8a6", "#8b5cf6", "#ec4899",
 ];
 
-// Extrae el nombre de la ecorregión desde las properties/description
+// --- Extraer nombre de ecorregión ---
 function getEcoregionName(feature) {
   if (!feature || !feature.properties) return null;
+
   const props = feature.properties;
 
-  // Si en algún momento el GeoJSON trae ECOREGION como campo separado
+  // Si alguna vez viene como campo suelto
   if (props.ECOREGION && typeof props.ECOREGION === "string") {
     return props.ECOREGION.trim();
   }
 
-  // Si viene embebido en el HTML de "description"
+  // En tu caso viene dentro del HTML de description
   if (typeof props.description === "string") {
     const match = props.description.match(
       /ECOREGION<\/td>\s*<td>([^<]+)<\/td>/i
     );
-    if (match && match[1]) {
-      return match[1].trim();
-    }
+    if (match && match[1]) return match[1].trim();
   }
 
   return null;
 }
 
-// Asigna un color estable según el nombre de la ecorregión
+// --- Color estable para cada ecorregión ---
 function getColorForEcoregion(name) {
-  if (!name) return "#6d28d9"; // fallback
+  if (!name) return "#6d28d9";
   let sum = 0;
-  for (let i = 0; i < name.length; i++) {
-    sum += name.charCodeAt(i);
+  for (const c of name) sum += c.charCodeAt(0);
+  return ECOREGION_COLORS[sum % ECOREGION_COLORS.length];
+}
+
+// --- Label amigable para tooltip ---
+function getFeatureLabel(layerId, feature) {
+  if (!feature || !feature.properties) return null;
+  const props = feature.properties;
+
+  if (layerId === "ecoregiones") {
+    const eco = getEcoregionName(feature);
+    return eco ? `Ecorregión: ${eco}` : null;
   }
-  const idx = Math.abs(sum) % ECOREGION_COLORS.length;
-  return ECOREGION_COLORS[idx];
+
+  const name =
+    props.NOMBRE ||
+    props.Nombre ||
+    props.name ||
+    props.ID ||
+    props.id ||
+    null;
+
+  return name ? name.trim() : null;
 }
 
 function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   const mapRef = useRef(null);
+  const selectedLayerRef = useRef(null);
 
   const currentTile = tileProviders[baseMap] || tileProviders.hot;
 
@@ -63,19 +73,17 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   useEffect(() => {
     if (!mapRef.current || !layers || layers.length === 0) return;
 
-    const map = mapRef.current;
     const group = L.featureGroup(
       layers.map((layer) => L.geoJSON(layer.data))
     );
 
     const bounds = group.getBounds();
-
     if (bounds.isValid()) {
-      map.fitBounds(bounds.pad(0.05));
+      mapRef.current.fitBounds(bounds.pad(0.05));
     }
   }, [layers]);
 
-  // Estilo de polígonos según capa (+ feature para ecoregiones)
+  // Estilo base por capa
   const getPolygonStyleForLayer = (layerId, feature) => {
     if (layerId === "publica") {
       return {
@@ -107,12 +115,11 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     if (layerId === "ecoregiones") {
       const name = getEcoregionName(feature);
       const baseColor = getColorForEcoregion(name);
-
       return {
-        color: baseColor,     // borde
+        color: baseColor,
         weight: 1,
-        fillColor: baseColor, // mismo color
-        fillOpacity: 0.45,    // pero translúcido
+        fillColor: baseColor,
+        fillOpacity: 0.45,
       };
     }
 
@@ -125,49 +132,8 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     };
   };
 
+  // Marcadores para POINT (si algún dataset trae puntos)
   const getPointMarkerForLayer = (layerId, latlng) => {
-    if (layerId === "publica") {
-      return L.circleMarker(latlng, {
-        radius: 6,
-        color: "#166534",
-        weight: 1.5,
-        fillColor: "#22c55e",
-        fillOpacity: 0.9,
-      });
-    }
-
-    if (layerId === "privada") {
-      return L.circleMarker(latlng, {
-        radius: 6,
-        color: "#7c2d12",
-        weight: 1.5,
-        fillColor: "#f97316",
-        fillOpacity: 0.9,
-      });
-    }
-
-    if (layerId === "conservadas") {
-      return L.circleMarker(latlng, {
-        radius: 6,
-        color: "#1d4ed8",
-        weight: 1.5,
-        fillColor: "#60a5fa",
-        fillOpacity: 0.9,
-      });
-    }
-
-    if (layerId === "ecoregiones") {
-      // Si alguna vez vienen puntos de ecorregiones, usamos un marcador acorde
-      return L.circleMarker(latlng, {
-        radius: 6,
-        color: "#6d28d9",
-        weight: 1.5,
-        fillColor: "#a855f7",
-        fillOpacity: 0.9,
-      });
-    }
-
-    // default
     return L.circleMarker(latlng, {
       radius: 6,
       color: "#1f2933",
@@ -177,22 +143,50 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     });
   };
 
-  const onEachFeatureBase = (feature, leafletLayer) => {
-    const props = feature.properties || {};
-    const name =
-      props.NOMBRE ||
-      props.Nombre ||
-      props.name ||
-      props.ID ||
-      props.id ||
-      "Parcela";
+  // Tooltips + highlight al hacer click
+  const onEachFeatureBase = (layerId, feature, leafletLayer) => {
+    // Nos aseguramos de no tener popups (rectángulo negro)
+    leafletLayer.unbindPopup();
 
-    leafletLayer.bindTooltip(name, {
-      direction: "center",
-      permanent: false,
-    });
+    // Tooltip (solo si hay nombre)
+    const label = getFeatureLabel(layerId, feature);
+    if (label) {
+      leafletLayer.bindTooltip(label, {
+        direction: "top",
+        sticky: true,
+        permanent: false,
+        className: "area-tooltip",
+      });
+    }
 
+    // Guardamos el estilo original de este feature
+    const originalStyle = getPolygonStyleForLayer(layerId, feature);
+
+    // Highlight al hacer click
     leafletLayer.on("click", () => {
+      // Restaurar selección previa (si la hay)
+      if (selectedLayerRef.current) {
+        selectedLayerRef.current.setStyle(
+          selectedLayerRef.current.originalStyle
+        );
+      }
+
+      // Guardamos referencia y estilo original
+      selectedLayerRef.current = leafletLayer;
+      leafletLayer.originalStyle = originalStyle;
+
+      // Aplicar highlight: borde más grueso y relleno más intenso
+      leafletLayer.setStyle({
+        weight: (originalStyle.weight || 1.5) + 2,
+        color: "#ffffff",
+        fillColor: originalStyle.fillColor,
+        fillOpacity: Math.min(
+          (originalStyle.fillOpacity ?? 0.5) + 0.25,
+          0.9
+        ),
+      });
+
+      // Notificar selección al panel lateral
       if (typeof onFeatureSelect === "function") {
         onFeatureSelect(feature);
       }
@@ -222,7 +216,9 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
           pointToLayer={(feature, latlng) =>
             getPointMarkerForLayer(layer.id, latlng)
           }
-          onEachFeature={onEachFeatureBase}
+          onEachFeature={(feature, leafletLayer) =>
+            onEachFeatureBase(layer.id, feature, leafletLayer)
+          }
         />
       ))}
     </MapContainer>
