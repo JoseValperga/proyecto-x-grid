@@ -1,9 +1,58 @@
+// src/components/MapView.jsx
 import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
 import { tileProviders } from "../config/tileProviders";
 
 const defaultCenter = [-26.8, -65.3];
+
+// Paleta de colores para ecoregiones
+const ECOREGION_COLORS = [
+  "#e11d48", // rosa fuerte
+  "#f97316", // naranja
+  "#22c55e", // verde
+  "#0ea5e9", // celeste
+  "#6366f1", // azul violáceo
+  "#a855f7", // violeta
+  "#facc15", // amarillo
+  "#14b8a6", // turquesa
+  "#8b5cf6", // lila
+  "#ec4899", // magenta
+];
+
+// Extrae el nombre de la ecorregión desde las properties/description
+function getEcoregionName(feature) {
+  if (!feature || !feature.properties) return null;
+  const props = feature.properties;
+
+  // Si en algún momento el GeoJSON trae ECOREGION como campo separado
+  if (props.ECOREGION && typeof props.ECOREGION === "string") {
+    return props.ECOREGION.trim();
+  }
+
+  // Si viene embebido en el HTML de "description"
+  if (typeof props.description === "string") {
+    const match = props.description.match(
+      /ECOREGION<\/td>\s*<td>([^<]+)<\/td>/i
+    );
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+
+  return null;
+}
+
+// Asigna un color estable según el nombre de la ecorregión
+function getColorForEcoregion(name) {
+  if (!name) return "#6d28d9"; // fallback
+  let sum = 0;
+  for (let i = 0; i < name.length; i++) {
+    sum += name.charCodeAt(i);
+  }
+  const idx = Math.abs(sum) % ECOREGION_COLORS.length;
+  return ECOREGION_COLORS[idx];
+}
 
 function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   const mapRef = useRef(null);
@@ -26,14 +75,14 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     }
   }, [layers]);
 
-  // Estilo de polígonos según capa
-  const getPolygonStyleForLayer = (layerId) => {
+  // Estilo de polígonos según capa (+ feature para ecoregiones)
+  const getPolygonStyleForLayer = (layerId, feature) => {
     if (layerId === "publica") {
       return {
         color: "#166534",
         weight: 1.5,
-        fillColor: "#22c55e88",
-        fillOpacity: 0.7,
+        fillColor: "#22c55e55",
+        fillOpacity: 0.35,
       };
     }
 
@@ -47,7 +96,6 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     }
 
     if (layerId === "conservadas") {
-      // azul para áreas conservadas
       return {
         color: "#1d4ed8",
         weight: 1.5,
@@ -57,12 +105,14 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     }
 
     if (layerId === "ecoregiones") {
-      // violeta para ecoregiones
+      const name = getEcoregionName(feature);
+      const baseColor = getColorForEcoregion(name);
+
       return {
-        color: "#6d28d9",
-        weight: 1.5,
-        fillColor: "#a855f766",
-        fillOpacity: 0.45,
+        color: baseColor,     // borde
+        weight: 1,
+        fillColor: baseColor, // mismo color
+        fillOpacity: 0.45,    // pero translúcido
       };
     }
 
@@ -107,6 +157,7 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     }
 
     if (layerId === "ecoregiones") {
+      // Si alguna vez vienen puntos de ecorregiones, usamos un marcador acorde
       return L.circleMarker(latlng, {
         radius: 6,
         color: "#6d28d9",
@@ -116,6 +167,7 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
       });
     }
 
+    // default
     return L.circleMarker(latlng, {
       radius: 6,
       color: "#1f2933",
@@ -166,7 +218,7 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
         <GeoJSON
           key={layer.id}
           data={layer.data}
-          style={() => getPolygonStyleForLayer(layer.id)}
+          style={(feature) => getPolygonStyleForLayer(layer.id, feature)}
           pointToLayer={(feature, latlng) =>
             getPointMarkerForLayer(layer.id, latlng)
           }
