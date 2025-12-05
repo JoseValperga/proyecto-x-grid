@@ -178,9 +178,11 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
 
       selectedLayerRef.current = leafletLayer;
 
+      //leafletLayer es la “capa” de Leaflet que representa un polígono o un circleMarker en el mapa.
+      //setStyle es un método de Leaflet que permite cambiar el estilo visual de esa capa en caliente, sin volver a crearla.
       leafletLayer.setStyle({
-        weight: (originalStyle.weight || 1.5) + 2,
-        color: "#ffffff",
+        weight: (originalStyle.weight || 1.5) + 2, //espesor del resaltado dos ountos mas grueso
+        color: originalStyle.color,
         fillColor: originalStyle.fillColor,
         fillOpacity: Math.min((originalStyle.fillOpacity ?? 0.5) + 0.25, 0.9),
       });
