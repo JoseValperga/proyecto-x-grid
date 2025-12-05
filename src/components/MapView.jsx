@@ -8,8 +8,16 @@ const defaultCenter = [-26.8, -65.3];
 
 // --- Paleta de colores para ecoregiones ---
 const ECOREGION_COLORS = [
-  "#e11d48", "#f97316", "#22c55e", "#0ea5e9", "#6366f1",
-  "#a855f7", "#facc15", "#14b8a6", "#8b5cf6", "#ec4899",
+  "#e11d48",
+  "#f97316",
+  "#22c55e",
+  "#0ea5e9",
+  "#6366f1",
+  "#a855f7",
+  "#facc15",
+  "#14b8a6",
+  "#8b5cf6",
+  "#ec4899",
 ];
 
 // --- Extraer nombre de ecorregión ---
@@ -53,12 +61,7 @@ function getFeatureLabel(layerId, feature) {
   }
 
   const name =
-    props.NOMBRE ||
-    props.Nombre ||
-    props.name ||
-    props.ID ||
-    props.id ||
-    null;
+    props.NOMBRE || props.Nombre || props.name || props.ID || props.id || null;
 
   return name ? name.trim() : null;
 }
@@ -145,9 +148,10 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
 
   // Tooltips + highlight
   const onEachFeatureBase = (layerId, feature, leafletLayer) => {
-    // Eliminamos popups (evita rectángulo negro)
-    //leafletLayer.unbindPopup();
+    // Quitamos popups
+    leafletLayer.unbindPopup();
 
+    // Tooltip
     const label = getFeatureLabel(layerId, feature);
     if (label) {
       leafletLayer.bindTooltip(label, {
@@ -158,8 +162,12 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
       });
     }
 
+    // 👉 Estilo base aplicado una sola vez aquí
     const originalStyle = getPolygonStyleForLayer(layerId, feature);
+    leafletLayer.setStyle(originalStyle);
+    leafletLayer.originalStyle = originalStyle;
 
+    // Click: highlight
     leafletLayer.on("click", () => {
       // Restaurar selección previa
       if (selectedLayerRef.current) {
@@ -169,16 +177,12 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
       }
 
       selectedLayerRef.current = leafletLayer;
-      leafletLayer.originalStyle = originalStyle;
 
       leafletLayer.setStyle({
         weight: (originalStyle.weight || 1.5) + 2,
         color: "#ffffff",
         fillColor: originalStyle.fillColor,
-        fillOpacity: Math.min(
-          (originalStyle.fillOpacity ?? 0.5) + 0.25,
-          0.9
-        ),
+        fillOpacity: Math.min((originalStyle.fillOpacity ?? 0.5) + 0.25, 0.9),
       });
 
       if (typeof onFeatureSelect === "function") {
@@ -197,16 +201,12 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
         mapRef.current = mapInstance;
       }}
     >
-      <TileLayer
-        attribution={currentTile.attribution}
-        url={currentTile.url}
-      />
+      <TileLayer attribution={currentTile.attribution} url={currentTile.url} />
 
       {layers.map((layer) => (
         <GeoJSON
           key={layer.id}
           data={layer.data}
-          style={(feature) => getPolygonStyleForLayer(layer.id, feature)}
           pointToLayer={(feature, latlng) =>
             getPointMarkerForLayer(layer.id, latlng)
           }
@@ -215,7 +215,6 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
           }
         />
       ))}
-      
     </MapContainer>
   );
 }
