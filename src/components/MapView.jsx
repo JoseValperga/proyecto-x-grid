@@ -1,7 +1,7 @@
 // src/components/MapView.jsx
 import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import L from "leaflet";
+import Leaflet from "leaflet";
 import { tileProviders } from "../config/tileProviders";
 
 const defaultCenter = [-26.8, -65.3];
@@ -73,8 +73,8 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   useEffect(() => {
     if (!mapRef.current || !layers || layers.length === 0) return;
 
-    const group = L.featureGroup(
-      layers.map((layer) => L.geoJSON(layer.data))
+    const group = Leaflet.featureGroup(
+      layers.map((layer) => Leaflet.geoJSON(layer.data))
     );
 
     const bounds = group.getBounds();
@@ -132,9 +132,9 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     };
   };
 
-  // Marcadores para POINT (si algún dataset trae puntos)
+  // Marcadores para POINT
   const getPointMarkerForLayer = (layerId, latlng) => {
-    return L.circleMarker(latlng, {
+    return Leaflet.circleMarker(latlng, {
       radius: 6,
       color: "#1f2933",
       weight: 1.5,
@@ -143,12 +143,11 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
     });
   };
 
-  // Tooltips + highlight al hacer click
+  // Tooltips + highlight
   const onEachFeatureBase = (layerId, feature, leafletLayer) => {
-    // Nos aseguramos de no tener popups (rectángulo negro)
-    leafletLayer.unbindPopup();
+    // Eliminamos popups (evita rectángulo negro)
+    //leafletLayer.unbindPopup();
 
-    // Tooltip (solo si hay nombre)
     const label = getFeatureLabel(layerId, feature);
     if (label) {
       leafletLayer.bindTooltip(label, {
@@ -159,23 +158,19 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
       });
     }
 
-    // Guardamos el estilo original de este feature
     const originalStyle = getPolygonStyleForLayer(layerId, feature);
 
-    // Highlight al hacer click
     leafletLayer.on("click", () => {
-      // Restaurar selección previa (si la hay)
+      // Restaurar selección previa
       if (selectedLayerRef.current) {
         selectedLayerRef.current.setStyle(
           selectedLayerRef.current.originalStyle
         );
       }
 
-      // Guardamos referencia y estilo original
       selectedLayerRef.current = leafletLayer;
       leafletLayer.originalStyle = originalStyle;
 
-      // Aplicar highlight: borde más grueso y relleno más intenso
       leafletLayer.setStyle({
         weight: (originalStyle.weight || 1.5) + 2,
         color: "#ffffff",
@@ -186,7 +181,6 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
         ),
       });
 
-      // Notificar selección al panel lateral
       if (typeof onFeatureSelect === "function") {
         onFeatureSelect(feature);
       }
@@ -221,6 +215,7 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
           }
         />
       ))}
+      
     </MapContainer>
   );
 }

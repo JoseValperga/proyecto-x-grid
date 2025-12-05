@@ -83,3 +83,10 @@ body,
 .leaflet-tooltip div {
   line-height: 1.2;
 }
+/* Quitar el rectángulo negro de foco en features interactivos */
+.leaflet-container .leaflet-interactive:focus {
+  outline: none;
+}
+.leaflet-interactive:focus {
+  outline: none;
+}
