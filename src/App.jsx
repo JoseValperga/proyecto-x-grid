@@ -17,6 +17,7 @@ function App() {
     privada: false,
     conservadas: false,
     ecoregiones: false,
+    tokenizables: true,
   });
 
   // Datos GeoJSON
@@ -25,6 +26,7 @@ function App() {
     privateData,
     conservedData,
     ecoregionsData,
+    tokenizableData
   } = useAreasData();
 
   // Construimos las capas visibles para el mapa
@@ -55,6 +57,13 @@ function App() {
     layersForMap.push({
       id: "ecoregiones",
       data: ecoregionsData,
+    });
+  }
+
+  if (layerVisibility.tokenizables && tokenizableData) {
+    layersForMap.push({
+      id: "tokenizables",
+      data: tokenizableData,
     });
   }
 

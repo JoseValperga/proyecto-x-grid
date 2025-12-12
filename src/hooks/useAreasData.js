@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 
 export function useAreasData() {
-  const [publicData, setPublicData] = useState(null);
-  const [privateData, setPrivateData] = useState(null);
+  const [publicData, setPublicData] = useState(null); // Áreas públicas
+  const [privateData, setPrivateData] = useState(null); // Áreas privadas
   const [conservedData, setConservedData] = useState(null);    // Áreas conservadas
   const [ecoregionsData, setEcoregionsData] = useState(null);  // Ecoregiones
+  const [tokenizableData, setTokenizableData] = useState(null); //Tokenizables
 
   // Cargar GeoJSON público
   useEffect(() => {
@@ -101,10 +102,49 @@ export function useAreasData() {
     loadEcoregionsData();
   }, []);
 
+  // Cargar GeoJSON de Tokenizables
+  useEffect(() => {
+    const loadTokenizable = async () => {
+      try {
+        const res = await fetch("/data/prueba_parcelas_tokenizables.geojson");
+        if (!res.ok) {
+          console.error(
+            "Error al cargar GeoJSON de parcelas tokenizables",
+            res.statusText
+          );
+          return;
+        }
+
+        const data = await res.json();
+
+        // ✅ Enriquecemos: agregamos un ID estable para UI + tokenización
+        const enriched = {
+          ...data,
+          features: (data.features || []).map((f, i) => ({
+            ...f,
+            properties: {
+              ...(f.properties || {}),
+              parcelId: `TK-${String(i + 1).padStart(3, "0")}`, // TK-001, TK-002...
+              // tokenId: i + 1, // (opcional) útil cuando mintes
+            },
+          })),
+        };
+
+        setTokenizableData(enriched);
+      } catch (err) {
+        console.error("Error de red al cargar parcelas tokenizables:", err);
+      }
+    };
+
+    loadTokenizable();
+  }, []);
+
+
   return {
     publicData,
     privateData,
     conservedData,
     ecoregionsData,
+    tokenizableData
   };
 }

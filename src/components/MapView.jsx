@@ -50,6 +50,7 @@ function getColorForEcoregion(name) {
   return ECOREGION_COLORS[sum % ECOREGION_COLORS.length];
 }
 
+/*
 // --- Label amigable para tooltip ---
 function getFeatureLabel(layerId, feature) {
   if (!feature || !feature.properties) return null;
@@ -58,6 +59,33 @@ function getFeatureLabel(layerId, feature) {
   if (layerId === "ecoregiones") {
     const eco = getEcoregionName(feature);
     return eco ? `Ecorregión: ${eco}` : null;
+  }
+
+  if (layerId === "tokenizables") {
+    // Si más adelante agregás un campo ID, usalo acá
+    return props.id || props.name || `Parcela tokenizable #${index + 1}`;
+  }
+
+  const name =
+    props.NOMBRE || props.Nombre || props.name || props.ID || props.id || null;
+
+  return name ? name.trim() : null;
+}
+*/
+
+// --- Label amigable para tooltip ---
+function getFeatureLabel(layerId, feature) {
+  if (!feature || !feature.properties) return null;
+  const props = feature.properties;
+
+  if (layerId === "ecoregiones") {
+    const eco = getEcoregionName(feature);
+    return eco ? `Ecorregión: ${eco}` : null;
+  }
+
+  if (layerId === "tokenizables") {
+    // Usamos el ID generado en useAreasData
+    return props.parcelId || "Parcela tokenizable";
   }
 
   const name =
@@ -123,6 +151,15 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
         weight: 1,
         fillColor: baseColor,
         fillOpacity: 0.45,
+      };
+    }
+
+    if (layerId === "tokenizables") {
+      return {
+        color: "#7e22ce", // borde violeta
+        weight: 2,
+        fillColor: "#a855f780", // violeta con transparencia
+        fillOpacity: 0.6,
       };
     }
 
