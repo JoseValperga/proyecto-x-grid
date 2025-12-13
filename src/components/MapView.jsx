@@ -233,7 +233,7 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   return (
     <MapContainer
       center={defaultCenter}
-      zoom={8}
+      zoom={12}
       scrollWheelZoom={true}
       style={{ width: "100%", height: "100%" }}
       whenCreated={(mapInstance) => {

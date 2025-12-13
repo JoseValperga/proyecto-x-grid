@@ -13,7 +13,7 @@ function App() {
 
   // Visibilidad de capas
   const [layerVisibility, setLayerVisibility] = useState({
-    publica: true,
+    publica: false,
     privada: false,
     conservadas: false,
     ecoregiones: false,
