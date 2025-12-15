@@ -103,6 +103,7 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
   // Ajustar el mapa para mostrar TODAS las capas visibles
   useEffect(() => {
     if (!mapRef.current || !layers || layers.length === 0) return;
+    selectedLayerRef.current = null;
 
     const group = Leaflet.featureGroup(
       layers.map((layer) => Leaflet.geoJSON(layer.data))
@@ -225,7 +226,8 @@ function MapView({ layers, onFeatureSelect, baseMap = "hot" }) {
       });
 
       if (typeof onFeatureSelect === "function") {
-        onFeatureSelect(feature);
+        //onFeatureSelect(feature);
+        onFeatureSelect({ layerId, feature });
       }
     });
   };

@@ -86,7 +86,7 @@ function SidePanel({
       </p>
 
       {selectedFeature ? (
-        <FeatureDetails feature={selectedFeature} />
+        <FeatureDetails layerId={selected.layerId} feature={selected.feature} />
       ) : (
         <div style={{ marginTop: "1rem", fontStyle: "italic" }}>
           Ninguna parcela seleccionada todavía.

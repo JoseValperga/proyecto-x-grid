@@ -6,7 +6,8 @@ import { useAreasData } from "./hooks/useAreasData";
 import { LAYER_DEFINITIONS } from "./config/layersConfig";
 
 function App() {
-  const [selectedFeature, setSelectedFeature] = useState(null);
+  //const [selectedFeature, setSelectedFeature] = useState(null);
+  const [selected, setSelected] = useState(null); // { layerId, feature } | null
 
   // Mapa de fondo
   const [baseMap, setBaseMap] = useState("hot");
@@ -26,7 +27,7 @@ function App() {
     privateData,
     conservedData,
     ecoregionsData,
-    tokenizableData
+    tokenizableData,
   } = useAreasData();
 
   // Construimos las capas visibles para el mapa
@@ -72,25 +73,43 @@ function App() {
       ...prev,
       [layerId]: !prev[layerId],
     }));
-    setSelectedFeature(null);
+    //setSelectedFeature(null);
+    setSelected(null);
   };
 
   return (
     <div className="app-container">
       {/* Mapa */}
       <div className="map-panel">
+        {/*}
         <MapView
           layers={layersForMap}
           baseMap={baseMap}
           onFeatureSelect={setSelectedFeature}
         />
+        */}
+        <MapView
+          layers={layersForMap}
+          baseMap={baseMap}
+          onFeatureSelect={setSelected}
+        />
       </div>
 
       {/* Panel lateral */}
+      {/*
       <SidePanel
         layerVisibility={layerVisibility}
         onToggleLayer={handleToggleLayer}
         selectedFeature={selectedFeature}
+        baseMap={baseMap}
+        onBaseMapChange={setBaseMap}
+        layerDefinitions={LAYER_DEFINITIONS}
+      />
+      */}
+      <SidePanel
+        layerVisibility={layerVisibility}
+        onToggleLayer={handleToggleLayer}
+        selected={selected}
         baseMap={baseMap}
         onBaseMapChange={setBaseMap}
         layerDefinitions={LAYER_DEFINITIONS}
