@@ -14,11 +14,11 @@ function App() {
 
   // Visibilidad de capas
   const [layerVisibility, setLayerVisibility] = useState({
-    publica: false,
+    publica: true,
     privada: false,
     conservadas: false,
     ecoregiones: false,
-    tokenizables: true,
+    tokenizables: false,
   });
 
   // Datos GeoJSON

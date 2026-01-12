@@ -5,7 +5,7 @@ import { tileProviders } from "../config/tileProviders";
 function SidePanel({
   layerVisibility,
   onToggleLayer,
-  selectedFeature,
+  selected, // ✅ ahora sí
   baseMap,
   onBaseMapChange,
   layerDefinitions,
@@ -85,7 +85,7 @@ function SidePanel({
         click en una parcela para ver sus datos.
       </p>
 
-      {selectedFeature ? (
+      {selected ? (
         <FeatureDetails layerId={selected.layerId} feature={selected.feature} />
       ) : (
         <div style={{ marginTop: "1rem", fontStyle: "italic" }}>
