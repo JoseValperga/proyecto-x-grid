@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./styles.css";
 import SidePanel from "./components/SidePanel";
 import MapView from "./components/MapView";
