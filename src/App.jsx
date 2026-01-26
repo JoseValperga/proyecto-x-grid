@@ -81,13 +81,6 @@ function App() {
     <div className="app-container">
       {/* Mapa */}
       <div className="map-panel">
-        {/*}
-        <MapView
-          layers={layersForMap}
-          baseMap={baseMap}
-          onFeatureSelect={setSelectedFeature}
-        />
-        */}
         <MapView
           layers={layersForMap}
           baseMap={baseMap}
@@ -96,16 +89,6 @@ function App() {
       </div>
 
       {/* Panel lateral */}
-      {/*
-      <SidePanel
-        layerVisibility={layerVisibility}
-        onToggleLayer={handleToggleLayer}
-        selectedFeature={selectedFeature}
-        baseMap={baseMap}
-        onBaseMapChange={setBaseMap}
-        layerDefinitions={LAYER_DEFINITIONS}
-      />
-      */}
       <SidePanel
         layerVisibility={layerVisibility}
         onToggleLayer={handleToggleLayer}

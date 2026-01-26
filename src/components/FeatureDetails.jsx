@@ -34,60 +34,6 @@ function getSanitizedHtmlDescription(props) {
 
   return cleaned.trim();
 }
-/*
-function FeatureDetails({ feature }) {
-  const props = feature.properties || {};
-  const title =
-    props.NOMBRE ||
-    props.Nombre ||
-    props.name ||
-    "Parcela seleccionada";
-
-  const geometryType = feature.geometry?.type || "Desconocido";
-
-  const htmlDesc = getSanitizedHtmlDescription(props);
-
-  return (
-    <div style={{ marginTop: "1rem" }}>
-      <h3 style={{ marginBottom: "0.5rem" }}>{title}</h3>
-
-      <p style={{ fontSize: "0.9rem", color: "#374151" }}>
-        <strong>Tipo de geometría:</strong> {geometryType}
-      </p>
-
-      <h4 style={{ marginTop: "1rem", marginBottom: "0.25rem" }}>Detalle</h4>
-
-      <div
-        style={{
-          backgroundColor: "#e5e7eb",
-          padding: "8px",
-          borderRadius: "8px",
-          maxHeight: "260px",
-          overflowY: "auto",
-          fontSize: "0.8rem",
-          lineHeight: "1.3rem",
-        }}
-      >
-        {htmlDesc ? (
-          <div
-            style={{ fontSize: "0.8rem", lineHeight: "1.25rem" }}
-            dangerouslySetInnerHTML={{ __html: htmlDesc }}
-          />
-        ) : (
-          <>
-            {props &&
-              Object.entries(props).map(([key, value]) => (
-                <p key={key}>
-                  <strong>{key}:</strong> {String(value)}
-                </p>
-              ))}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-  */
 
 function FeatureDetails({ layerId, feature }) {
   const props = feature?.properties || {};
